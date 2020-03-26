@@ -28,7 +28,7 @@ public class InstanceManager {
 
 
     // limit of instances
-    private int limit = 3;
+    private int limit = 10;
     private Map<String, EFlintInstance>     instances;
     private static final int PORT_MIN_NUM = 20000;
     private static final int PORT_MAX_NUM = 30000;
