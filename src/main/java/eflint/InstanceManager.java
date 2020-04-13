@@ -35,7 +35,7 @@ public class InstanceManager {
     // how to run eflint-server instance
     private static final String EFLINT_COMMAND = "eflint-server";
     // eflint model file address
-    private static final String EFLINT_FILE = "/home/msotafa/IdeaProjects/language-docs/flint/eflintonline/examples/voting_full.eflint";
+    private static final String EFLINT_FILE = "/home/msotafa/IdeaProjects/flintserver/src/main/resources/pseudo-gdpr-1.eflint";
 
 
     public StandardResponse getAll() {
