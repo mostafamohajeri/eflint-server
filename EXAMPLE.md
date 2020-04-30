@@ -2,7 +2,7 @@
 
 **flint version: 0.1.0.0**
 
-**[used .eflint file](src/main/resources/pseudo-gdpr-1.eflint)**
+**[used .eflint file](web-server/src/main/resources/pseudo-gdpr-1.eflint)**
 
 
 ## Create an instance

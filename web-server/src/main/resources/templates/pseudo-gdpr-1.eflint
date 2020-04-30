@@ -60,6 +60,7 @@ Act give consent
   Creates 
     consent(),
     revoke consent(consent = consent())     // DIFF: revoking consent is only possible after it has been given
+  Present when subject && controller
 
 Act collect consent
   Actor controller
@@ -75,6 +76,7 @@ Act collect consent
     stored consent()
   Terminates
     duty to remove consent() // DIFF
+  Present when controller && subject && consent
 
 Act use data
   Actor controller
@@ -175,7 +177,9 @@ Act remove consent
     subject &&
     stored consent() // `stored consent` must exist to make it removeable
   Terminates
-    stored consent()
+    stored consent(),
+    duty to remove consent()
+  Present when controller && subject && consent
 
 Act remove consent duty
   Actor controller
@@ -289,15 +293,15 @@ Duty duty to notify breaches
 
 
 ##
-Fact controller Identified by Telfort
-Fact person Identified by Alice, Bob 
+//Fact controller Identified by Telfort
+Fact person Identified by Alice//, Bob 
 Fact datatype Identified by Phone_number, Address
 ###
 
 person. subject. controller.
 give consent. collect consent. remove consent. store data. remove data. use data. ask access. ask removal. request to modify consent. modify consent. enable access. notify breaches.
 
-personal data(datatype = Phone_number, person = Bob).
+//personal data(datatype = Phone_number, person = Bob).
 personal data(datatype = Address, person = Alice).
 
 

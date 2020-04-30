@@ -15,8 +15,8 @@ public class Main {
 
         post("/command", (request, response) -> {
 
-
-            response.type("application/json");
+            response.type("" +
+                    "application/json");
 
             EFlintRequest eFlintRequest =
                     new Gson().fromJson(request.body(), EFlintRequest.class);
@@ -61,7 +61,7 @@ public class Main {
 
             System.out.println(new Gson().toJson(createEFlintInstanceRequest));
 
-            CompletableFuture<StandardResponse> r = InstanceManager.getInstance().createNewInstance();
+            CompletableFuture<StandardResponse> r = InstanceManager.getInstance().createNewInstance(createEFlintInstanceRequest);
 
             return new Gson().toJson(r.get());
 

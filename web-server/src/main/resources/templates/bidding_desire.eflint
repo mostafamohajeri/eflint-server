@@ -1,0 +1,29 @@
+Fact person Identified by <person_name>
+
+Fact item
+
+Fact bid
+  Identified by person * item
+
+Duty desire-to-bid
+  Holder person
+  Claimant person'
+  Related to item
+  Holds when !bid(person,item)
+
+
+
+Act act-of-bid
+  Actor person
+  Recipient item
+  Conditioned by !bid(person,item)
+  Terminates desire-to-bid(person,person,item)
+  Creates bid(person,item)
+  Present when item
+
+
+##
+
+
+
+###

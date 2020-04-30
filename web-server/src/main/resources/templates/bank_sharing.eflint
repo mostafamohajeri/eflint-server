@@ -1,0 +1,62 @@
+Fact bank Identified by PartyA, PartyB
+Placeholder a For bank
+Placeholder b For bank
+
+Fact client
+Fact risk Identified by 1, 2, 3
+Fact risk-assignment Identified by bank * client * risk
+
+Fact property Identified by Country, SIB
+Fact sensitivity Identified by 1, 2, 3
+Fact sensitivity-assignment Identified by bank * property * sensitivity
+
+Fact shared Identified by a * b * client * property When a != b
+
+Duty duty-to-share
+  Holder a
+  Claimant b
+  Related to client, property
+   When a != b
+  Holds when risk-assignment(a, client, risk)
+          && sensitivity-assignment(a, property, risk')
+          && risk >= risk'
+          && !shared()
+
+Duty duty-not-to-share
+  Holder a
+  Claimant b
+  Related to client, property
+   When a != b
+  Holds when !duty-to-share()
+  Violated when shared()
+
+Act share-property
+  Actor a
+  Recipient b
+  Related to client, property
+    When a != b
+  Conditioned by !shared()
+  Terminates duty-to-share()
+  Creates shared()
+
+Event risk-assignment-changed
+  Related to bank, client, risk'
+  Terminates risk-assignment(), shared(a = bank)
+  Creates risk-assignment(risk = risk')
+  Holds when (Exists risk : risk-assignment())
+
+##
+
+Fact client Identified by Alice, Bob, Chloe
+
+###
+
+share-property.
+
+risk-assignment(PartyB, Alice, 3).
+risk-assignment(PartyB, Bob, 2).
+risk-assignment(PartyB, Chloe, 2).
+
+sensitivity-assignment(PartyB, SIB, 2).
+sensitivity-assignment(PartyB, Country, 3).
+

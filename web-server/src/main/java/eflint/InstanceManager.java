@@ -1,19 +1,21 @@
 package eflint;
 
 import com.google.gson.Gson;
+import eflint.utils.TemplateManager;
+import requests.CreateEFlintInstanceRequest;
+import response.ListContainer;
 import response.StandardResponse;
 import response.StatusResponse;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.DatagramSocket;
 import java.net.ServerSocket;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
-import java.util.concurrent.*;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class InstanceManager {
     private static InstanceManager ourInstance = new InstanceManager();
@@ -29,21 +31,24 @@ public class InstanceManager {
 
     // limit of instances
     private int limit = 10;
-    private Map<String, EFlintInstance>     instances;
+    private Map<String, EFlintInstance> instances;
     private static final int PORT_MIN_NUM = 20000;
     private static final int PORT_MAX_NUM = 30000;
     // how to run eflint-server instance
-    private static final String EFLINT_COMMAND = "eflint-server";
+    private static final String EFLINT_COMMAND = "/home/msotafa/IdeaProjects/language-docs/flint/haskell/dist/build/eflint-server/eflint-server";
     // eflint model file address
-    private static final String EFLINT_FILE = "/home/msotafa/IdeaProjects/flintserver/src/main/resources/pseudo-gdpr-1.eflint";
+//    private static final String EFLINT_FILE = "/home/msotafa/IdeaProjects/flintserver/src/main/resources/bidding_desire.eflint";
+    private static final String FLINT_READY_MESSAGE = "AWAITING STATEMENT";
 
 
     public StandardResponse getAll() {
-        return new StandardResponse(StatusResponse.SUCCESS,new Gson().toJsonTree(new ArrayList<>(instances.keySet())));
+        return new StandardResponse(
+                StatusResponse.SUCCESS, new Gson().toJsonTree(ListContainer.from(new ArrayList<>(instances.keySet())))
+        );
     }
 
     public int getPortByUUID(String uuid) {
-        if( instances.containsKey(uuid) ) {
+        if (instances.containsKey(uuid)) {
             return instances.get(uuid).getPort();
         }
         return -1;
@@ -54,7 +59,7 @@ public class InstanceManager {
 
         EFlintInstance e = instances.remove(uuid);
 
-        if(e != null) {
+        if (e != null) {
             e.getThread().stop();
             return new StandardResponse(StatusResponse.SUCCESS, "flint exited nicely :)");
         }
@@ -64,8 +69,8 @@ public class InstanceManager {
 
 
     public synchronized StandardResponse killAllInstances() {
-        for (EFlintInstance instance: instances.values()
-             ) {
+        for (EFlintInstance instance : instances.values()
+        ) {
             instance.getThread().stop();
         }
 
@@ -74,41 +79,51 @@ public class InstanceManager {
         return new StandardResponse(StatusResponse.SUCCESS);
     }
 
-    public synchronized CompletableFuture<StandardResponse> createNewInstance() {
+    public synchronized CompletableFuture<StandardResponse> createNewInstance(CreateEFlintInstanceRequest request) {
         int port = getRandomPort();
+
+
+
 
         CompletableFuture<StandardResponse> futureResponse = new CompletableFuture<>();
 
-        String uuid = generateUUID();
+        Optional<File> opFlintFile = TemplateManager.getInstance().synthetize(request.getModelName(),request.getValues());
+        if(opFlintFile.isEmpty()) {
+            futureResponse.complete(new StandardResponse(StatusResponse.ERROR, "something went wrong with synthesizing your template"));
+        } else {
 
-        Thread t = new Thread(() -> {
 
-            if (instances.keySet().size() >= limit) {
-                futureResponse.complete(new StandardResponse(StatusResponse.ERROR, "limit of " + limit + " instances reached"));
-                return;
-            }
+            String uuid = generateUUID();
 
-            runEFlintProcess(port,uuid, new EFlintLister() {
-                @Override
-                public void started() {
-                    instances.put(uuid,new EFlintInstance(port,uuid,Thread.currentThread()));
-                    futureResponse.complete(new StandardResponse(StatusResponse.SUCCESS, uuid));
+            Thread t = new Thread(() -> {
+
+                if (instances.keySet().size() >= limit) {
+                    futureResponse.complete(new StandardResponse(StatusResponse.ERROR, "limit of " + limit + " instances reached"));
+                    return;
                 }
 
-                @Override
-                public void terminated(int exitVal,String uuid) {
-                    EFlintInstance e = instances.remove(uuid);
-
-                    if(e != null) {
-                        e.getThread().stop();
-                        futureResponse.complete(new StandardResponse(StatusResponse.ERROR, "flint exit code: " + exitVal));
+                runEFlintProcess(opFlintFile.get(), port, uuid, new EFlintLister() {
+                    @Override
+                    public void started() {
+                        instances.put(uuid, new EFlintInstance(port, uuid, Thread.currentThread()));
+                        futureResponse.complete(new StandardResponse(StatusResponse.SUCCESS, uuid));
                     }
-                }
-            });
-        }
-        );
 
-        t.start();
+                    @Override
+                    public void terminated(int exitVal, String uuid) {
+                        EFlintInstance e = instances.remove(uuid);
+
+                        if (e != null) {
+                            e.getThread().stop();
+                            futureResponse.complete(new StandardResponse(StatusResponse.ERROR, "flint exit code: " + exitVal));
+                        }
+                    }
+                });
+            }
+            );
+
+            t.start();
+        }
 
         return futureResponse;
 
@@ -169,16 +184,18 @@ public class InstanceManager {
     }
 
 
-    private void runEFlintProcess(int port,String uuid, EFlintLister lister) {
+    private void runEFlintProcess(File file,int port, String uuid, EFlintLister lister) {
 //        ProcessBuilder processBuilder = new ProcessBuilder();
 
         // -- Linux --
+
 
         int exitVal = -1;
         // Run a shell command
 //        processBuilder.command("bash" ,"-c" , "ls -ali" );
 
-        String command = EFLINT_COMMAND + " " + EFLINT_FILE + " " + String.valueOf(port);
+        String command = EFLINT_COMMAND + " " + file.getAbsolutePath() + " " + String.valueOf(port);
+        System.out.println(command);
 //        System.out.println(command);
 //        processBuilder.command("bash" ,"-c" , EFLINT_COMMAND + " " + EFLINT_FILE + " "  + String.valueOf(port));
 
@@ -187,26 +204,27 @@ public class InstanceManager {
             // -- Linux --
 
             // Run a shell command
-            Process proc = Runtime.getRuntime().exec(command);
+//            Process proc = Runtime.getRuntime().exec(new String[]{"bash","-c", });
 
-            BufferedReader stdInput = new BufferedReader(new
-                    InputStreamReader(proc.getErrorStream()));
+            ProcessBuilder ps = new ProcessBuilder(EFLINT_COMMAND, file.getAbsolutePath(), String.valueOf(port));
+            ps.redirectErrorStream(true);
+//            ps.redirectOutput(ProcessBuilder.Redirect.INHERIT);
 
-            BufferedReader stdError = new BufferedReader(new
-                    InputStreamReader(proc.getErrorStream()));
+            Process pr = ps.start();
+
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(pr.getInputStream()));
 
             lister.started();
 
-            String s;
-            while ((s = stdInput.readLine()) != null) {
-                System.out.println(s);
+            String line;
+            while ((line = in.readLine()) != null) {
+                System.out.println("here:" + line);
             }
+            pr.waitFor();
+            System.out.println("ok!");
 
-            while ((s = stdError.readLine()) != null) {
-                System.out.println(s);
-            }
-
-            exitVal = proc.waitFor();
+            in.close();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -214,15 +232,16 @@ public class InstanceManager {
             e.printStackTrace();
         }
 
-        lister.terminated(exitVal,uuid);
+        lister.terminated(exitVal, uuid);
 
     }
 
     public interface EFlintLister {
-        void started();
-        void terminated(int exitVal,String uuid);
-    }
 
+        void started();
+
+        void terminated(int exitVal, String uuid);
+    }
 
 
 }

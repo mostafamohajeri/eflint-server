@@ -1,6 +1,17 @@
 ## To run
 
-`mvn compile & mvn exec:java -Dexec.mainClass="Main"`
+go to `web-server` directory
+
+
+```
+$ cd [project-home]/web-server
+```
+### Compile
+
+`mvn compile`
+
+### Run
+`mvn exec:java -Dexec.mainClass="Main"`
 
 ## Temporary settings
 
@@ -24,11 +35,18 @@
 endpoint: POST `/create`
 
 
-
-
 description: creates an eflint instance and returns a unique uuid to it.
 
-request params: none
+request:
+```json
+{
+	"template-name": "pseudo-pesudo-gdpr.eflint",
+	"values" : {
+		"purposes": "Revenue + Research",
+		"datatypes": "Address + Phone"
+	}
+}
+```
 
 response: 
 ```json

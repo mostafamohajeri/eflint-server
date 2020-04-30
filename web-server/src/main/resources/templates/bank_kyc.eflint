@@ -1,0 +1,74 @@
+Fact client
+
+Fact country
+Fact sib
+Fact risk Identified by 1, 2, 3 // low, medium, high
+
+Fact country-of Identified by country * client
+Fact sib-of     Identified by sib     * client
+
+Fact country-risk Identified by country * risk
+Fact sib-risk     Identified by sib     * risk
+
+Fact risk-of Identified by   risk    * client
+
+Fact employee
+
+Placeholder country_risk For risk
+Placeholder sib_risk     For risk
+
+Act assign-risk
+  Actor employee
+  Recipient client
+  Related to risk
+  Conditioned by  country-of(country = country)
+               && sib-of(sib = sib)
+               && country-risk(risk = country_risk)
+               && sib-risk(risk = sib_risk)
+               && risk >= country_risk
+               && risk >= sib_risk
+               && !(Exists risk' : risk-of(risk = risk'))
+  Creates risk-of()
+
+Event require-analysis
+  Related to client
+  Creates assign-risk()
+  Terminates risk-of()
+  Holds when !assign-risk()
+
+// TODO
+// actions can be added that allow a bank employee to gather information about a client
+
+##
+
+Fact country Identified by Afghanistan, Bahrain, Chili
+Fact sib     Identified by Farming, Chemical, Gambling
+Fact client  Identified by Alice, Bob, Chloe
+
+Fact employee Identified by Employee
+
+###
+
+country-risk(Afghanistan, 3).  // may differ for other bank
+country-risk(Bahrain, 2).
+country-risk(Chili, 1).
+
+sib-risk(Farming, 1).          // may differ for other bank
+sib-risk(Chemical, 2).
+sib-risk(Gambling, 3).
+
+country-of(Afghanistan, Alice).// may differ for other bank
+country-of(Bahrain, Bob).
+country-of(Chili, Chloe).
+
+sib-of(Chemical, Alice).       // may differ for other bank
+sib-of(Farming, Bob).
+sib-of(Chemical, Chloe).
+
+####
+
+require-analysis(Alice).
+require-analysis(Bob).
+require-analysis(Chloe).
+
+assign-risk(Employee, Alice, 2). // non-compliant because risk too low
