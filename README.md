@@ -24,8 +24,6 @@ $ cd [project-home]/web-server
     private int limit = 3;
     // eflint-server executable address
     private static final String EFLINT_COMMAND = "eflint-server";
-    // eflint model file address
-    private static final String EFLINT_FILE = "path/to/flint/eflintonline/examples/voting_full.eflint";
 ```
 
 ## API Endpoints
@@ -37,6 +35,8 @@ endpoint: POST `/create`
 
 description: creates an eflint instance and returns a unique uuid to it.
 
+the eflint template files should be located at `[PROJECT_HOME]/web-server/src/main/resources/templates/`
+
 request:
 ```json
 {
@@ -47,6 +47,8 @@ request:
 	}
 }
 ```
+
+the ```values``` can be empty ```values: {}```  if the eflint file is a pure eflint file (not a template)
 
 response: 
 ```json
