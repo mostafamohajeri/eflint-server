@@ -1,0 +1,34 @@
+Fact person
+
+Fact said_hi Identified by person * person
+
+Act say_hi
+  Actor person1
+  Recipient person2
+  When person1 != person2
+  Creates
+    duty_to_say_hi(person2,person1)
+    , said_hi(person1,person2)
+  Terminates
+    duty_to_say_hi(person1,person2)
+  Present when person1 && person2
+
+Duty duty_to_say_hi
+  Holder person1
+  Claimant person2
+  When
+    !said_hi(person1,person2)
+
+Event met_a_person
+  Related to person1, person2
+  When person1 != person2
+  Creates
+    duty_to_say_hi(person1,person2)
+
+##
+
+
+
+###
+
+

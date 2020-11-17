@@ -32,16 +32,15 @@ public class TemplateManager {
             return Optional.of(
                     writeToFile(
                             synthesizeFile(
-                                    readTemplate(
-                                            templateName
-                                    ),
+//                                    readTemplate(
+//                                            templateName
+//                                    ),
+                                    Paths.get(templateName).toFile(),
                                     values !=null ? values : Collections.EMPTY_MAP
                             )
                     )
             );
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 

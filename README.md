@@ -11,7 +11,7 @@ $ cd [project-home]/web-server
 `mvn compile`
 
 ### Run
-`mvn exec:java -Dexec.mainClass="Main"`
+`mvn exec:java -Dexec.mainClass="eflint.Main"`
 
 ## Temporary settings
 
@@ -23,7 +23,8 @@ $ cd [project-home]/web-server
     // limit of instances
     private int limit = 3;
     // eflint-server executable address
-    private static final String EFLINT_COMMAND = "eflint-server";
+    private static final String EFLINT_COMMAND = "eflint-server"; // if on path
+    // private static final String EFLINT_COMMAND = "/path/to/eflint-server"; // if not on path (recommended)
 ```
 
 ## API Endpoints
@@ -35,12 +36,12 @@ endpoint: POST `/create`
 
 description: creates an eflint instance and returns a unique uuid to it.
 
-the eflint template files should be located at `[PROJECT_HOME]/web-server/src/main/resources/templates/`
+
 
 request:
 ```json
 {
-	"template-name": "pseudo-pesudo-gdpr.eflint",
+	"template-name": "/absolute/path/to/pseudo-pesudo-gdpr.eflint",
 	"values" : {
 		"purposes": "Revenue + Research",
 		"datatypes": "Address + Phone"
@@ -48,7 +49,7 @@ request:
 }
 ```
 
-the ```values``` can be empty ```values: {}```  if the eflint file is a pure eflint file (not a template)
+the ```values``` can be empty ```values: {}```  or omitted if the template file is a pure `eflint` file (not a `st4` template)
 
 response: 
 ```json

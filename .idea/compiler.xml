@@ -9,6 +9,8 @@
         <outputRelativeToContentRoot value="true" />
         <module name="requestfactory" />
         <module name="webserver" />
+        <module name="web-server" />
+        <module name="request-factory" />
       </profile>
     </annotationProcessing>
   </component>

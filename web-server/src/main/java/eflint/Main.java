@@ -1,3 +1,5 @@
+package eflint;
+
 import com.google.gson.Gson;
 import eflint.InstanceManager;
 import requesthandlers.EFlintRequestHandler;
