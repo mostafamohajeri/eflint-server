@@ -36,8 +36,6 @@ endpoint: POST `/create`
 
 description: creates an eflint instance and returns a unique uuid to it.
 
-
-
 request:
 ```json
 {
@@ -65,6 +63,13 @@ there is a limit to how many instances can be on the server and if exceeded the 
     "message": "limit of 3 instances reached"
 }
 ```
+
+### upload
+
+endpoint: POST `/upload`
+
+
+description: submit an eFLINT file under the name `fileToUpload`. behaves identical to a `/create` request with the uploaded file as `template-name`.
 
 
 ### kill
