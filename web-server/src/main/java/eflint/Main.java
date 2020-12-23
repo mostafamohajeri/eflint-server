@@ -101,9 +101,18 @@ public class Main {
             EFlintRequest eFlintRequest =
                     new Gson().fromJson(request.body(), EFlintRequest.class);
 
+
             if(eFlintRequest.getUuid() == null) {
                 return new Gson().toJson(new StandardResponse(StatusResponse.ERROR,"please provide a valid uuid"));
             }
+
+            int port = InstanceManager.getInstance().getPortByUUID(eFlintRequest.getUuid());
+
+            if(port == -1) {
+                return new Gson().toJson(new StandardResponse(StatusResponse.ERROR,"no such instance present"));
+            }
+
+
 
             return new Gson().toJson(InstanceManager.getInstance().killInstance(eFlintRequest.getUuid()));
 
