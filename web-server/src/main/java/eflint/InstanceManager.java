@@ -1,8 +1,12 @@
 package eflint;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import eflint.utils.TemplateManager;
+import requesthandlers.EFlintRequestHandler;
+import requests.ControlRequest;
 import requests.CreateEFlintInstanceRequest;
+import requests.EFlintRequest;
 import response.ListContainer;
 import response.StandardResponse;
 import response.StatusResponse;
@@ -16,6 +20,8 @@ import java.net.ServerSocket;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static requesthandlers.EFlintRequestHandler.handleRequest;
 
 public class InstanceManager {
     private static InstanceManager ourInstance = new InstanceManager();
@@ -35,7 +41,7 @@ public class InstanceManager {
     private static final int PORT_MIN_NUM = 20000;
     private static final int PORT_MAX_NUM = 30000;
     // how to run eflint-server instance
-    private static final String EFLINT_COMMAND = "/home/msotafa/IdeaProjects/eflint/haskell-implementation/dist/build/eflint-server/eflint-server";
+    private static final String EFLINT_COMMAND = "eflint-server";
     // eflint model file address
 //    private static final String EFLINT_FILE = "/home/msotafa/IdeaProjects/flintserver/src/main/resources/bidding_desire.eflint";
     private static final String FLINT_READY_MESSAGE = "AWAITING STATEMENT";
@@ -56,27 +62,44 @@ public class InstanceManager {
 
     public synchronized StandardResponse killInstance(String uuid) {
 
+        Gson gson = new Gson();
 
         EFlintInstance e = instances.remove(uuid);
 
-        if (e != null) {
-            e.getThread().stop();
-            return new StandardResponse(StatusResponse.SUCCESS, "flint exited nicely :)");
-        }
+        EFlintRequest eFlintRequest = ControlRequest.crateKillCommand(uuid);
 
-        return new StandardResponse(StatusResponse.ERROR, "not found");
+        StandardResponse r = EFlintRequestHandler.handleRequest(eFlintRequest,e.getPort());
+
+        e.getThread().interrupt();
+
+        return r;
     }
 
 
     public synchronized StandardResponse killAllInstances() {
+
+        Gson gson = new Gson();
+
+        JsonArray a = new JsonArray();
+
         for (EFlintInstance instance : instances.values()
         ) {
-            instance.getThread().stop();
+            EFlintRequest eFlintRequest = ControlRequest.crateKillCommand(instance.getUuid());
+
+            StandardResponse r = EFlintRequestHandler.handleRequest(eFlintRequest,instance.getPort());
+
+            instance.getThread().interrupt();
+
+            a.add(r.getData());
         }
 
         instances.clear();
 
-        return new StandardResponse(StatusResponse.SUCCESS);
+
+
+
+        return new StandardResponse(StatusResponse.SUCCESS, a);
+
     }
 
     public synchronized CompletableFuture<StandardResponse> createNewInstance(CreateEFlintInstanceRequest request) {
@@ -102,6 +125,7 @@ public class InstanceManager {
                 runEFlintProcess(opFlintFile.get(), port, uuid, new EFlintLister() {
                     @Override
                     public void started() {
+                        System.out.println(String.format("instance started on port %s with uuid %s",port,uuid));
                         instances.put(uuid, new EFlintInstance(port, uuid, Thread.currentThread()));
                         futureResponse.complete(new StandardResponse(StatusResponse.SUCCESS, uuid));
                     }
@@ -111,7 +135,7 @@ public class InstanceManager {
                         EFlintInstance e = instances.remove(uuid);
 
                         if (e != null) {
-                            e.getThread().stop();
+                            e.getThread().interrupt();
                             futureResponse.complete(new StandardResponse(StatusResponse.ERROR, "flint exit code: " + exitVal));
                         }
                     }
