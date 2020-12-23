@@ -35,7 +35,7 @@ public class InstanceManager {
     private static final int PORT_MIN_NUM = 20000;
     private static final int PORT_MAX_NUM = 30000;
     // how to run eflint-server instance
-    private static final String EFLINT_COMMAND = "/home/msotafa/IdeaProjects/eflint/haskell-implementation/dist/build/eflint-server/eflint-server";
+    private static final String EFLINT_COMMAND = "eflint-server";
     // eflint model file address
 //    private static final String EFLINT_FILE = "/home/msotafa/IdeaProjects/flintserver/src/main/resources/bidding_desire.eflint";
     private static final String FLINT_READY_MESSAGE = "AWAITING STATEMENT";

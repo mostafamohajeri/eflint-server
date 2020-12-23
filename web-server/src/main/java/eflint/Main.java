@@ -8,12 +8,20 @@ import requests.EFlintRequest;
 import response.StandardResponse;
 import response.StatusResponse;
 
+import javax.servlet.MultipartConfigElement;
+import javax.servlet.http.Part;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.concurrent.CompletableFuture;
 
+import spark.utils.IOUtils;
 import static spark.Spark.*;
 
 public class Main {
     public static void main(String[] args) {
+
+        port(8080);
 
         post("/command", (request, response) -> {
 
@@ -66,6 +74,23 @@ public class Main {
             CompletableFuture<StandardResponse> r = InstanceManager.getInstance().createNewInstance(createEFlintInstanceRequest);
 
             return new Gson().toJson(r.get());
+
+        });
+
+        post("/upload", (request, response) -> {
+          response.type("application/json");
+          request.attribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement("/tmp"));
+          Part filePart = request.raw().getPart("fileToUpload");
+          try (InputStream inputStream = request.raw().getPart("fileToUpload").getInputStream()) {
+            String target_file = "/tmp/" + filePart.getSubmittedFileName();
+            OutputStream outputStream = new FileOutputStream(target_file);
+            IOUtils.copy(inputStream, outputStream);
+            outputStream.close();
+            CreateEFlintInstanceRequest inst_req = new CreateEFlintInstanceRequest();
+            inst_req.setModelName(target_file);
+            CompletableFuture<StandardResponse> r = InstanceManager.getInstance().createNewInstance(inst_req);
+            return new Gson().toJson(r.get());
+         }
 
         });
 
