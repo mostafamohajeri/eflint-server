@@ -106,8 +106,16 @@ public class InstanceManager {
         int port = getRandomPort();
 
         CompletableFuture<StandardResponse> futureResponse = new CompletableFuture<>();
+        Optional<File> opFlintFile;
+        if (request.getValues() == null) {
+          File file = new File(request.getModelName());
+          opFlintFile = file.isFile() ? Optional.of(file) : Optional.empty();
+        }
+        else {
+          opFlintFile = TemplateManager.getInstance().synthetize(request.getModelName(),request.getValues());
+       }
 
-        Optional<File> opFlintFile = TemplateManager.getInstance().synthetize(request.getModelName(),request.getValues());
+
         if(opFlintFile.isEmpty()) {
             futureResponse.complete(new StandardResponse(StatusResponse.ERROR, "something went wrong with synthesizing your template"));
         } else {
