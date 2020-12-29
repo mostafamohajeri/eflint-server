@@ -16,4 +16,6 @@ public class EFlintInstance {
     @Getter @Setter
     Thread thread;
 
+    @Getter @Setter
+    String filename;
 }

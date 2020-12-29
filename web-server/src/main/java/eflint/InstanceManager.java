@@ -2,6 +2,7 @@ package eflint;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.reflect.*;
 import eflint.utils.TemplateManager;
 import requesthandlers.EFlintRequestHandler;
 import requests.ControlRequest;
@@ -43,15 +44,26 @@ public class InstanceManager {
     // how to run eflint-server instance
     private static final String EFLINT_COMMAND = "eflint-server";
     // eflint model file address
-//    private static final String EFLINT_FILE = "/home/msotafa/IdeaProjects/flintserver/src/main/resources/bidding_desire.eflint";
     private static final String FLINT_READY_MESSAGE = "AWAITING STATEMENT";
 
+/*
+    public StandardResponse getAll() {
+        HashMap<String,EFlintInstance> map = new HashMap<String,EFlintInstance>();
+        for (Map.Entry<String,EFlintInstance> entry : instances.entrySet()) {
+          map.put(entry.getKey(), entry.getValue());
+        }
+        System.out.println(map);
+        return new StandardResponse(
+                StatusResponse.SUCCESS, new Gson().toJsonTree(MapContainer.from(map))
+        );
+    }*/
 
     public StandardResponse getAll() {
         return new StandardResponse(
                 StatusResponse.SUCCESS, new Gson().toJsonTree(ListContainer.from(new ArrayList<>(instances.keySet())))
         );
     }
+
 
     public int getPortByUUID(String uuid) {
         if (instances.containsKey(uuid)) {
@@ -134,7 +146,7 @@ public class InstanceManager {
                     @Override
                     public void started() {
                         System.out.println(String.format("instance started on port %s with uuid %s",port,uuid));
-                        instances.put(uuid, new EFlintInstance(port, uuid, Thread.currentThread()));
+                        instances.put(uuid, new EFlintInstance(port, uuid, Thread.currentThread(), request.getModelName()));
                         futureResponse.complete(new StandardResponse(StatusResponse.SUCCESS, uuid));
                     }
 
@@ -226,7 +238,6 @@ public class InstanceManager {
         String command = EFLINT_COMMAND + " " + file.getAbsolutePath() + " " + String.valueOf(port);
         System.out.println(command);
 //        System.out.println(command);
-//        processBuilder.command("bash" ,"-c" , EFLINT_COMMAND + " " + EFLINT_FILE + " "  + String.valueOf(port));
 
         try {
 
