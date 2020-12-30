@@ -1,10 +1,8 @@
-FROM ltvanbinsbergen/eflint:latest
-
-#FROM httpd:2.4 
-#COPY my-httpd.conf /usr/local/apache2/conf/httpd.conf
-#CMD service apache2 restart
+FROM ltvanbinsbergen/eflint:latest AS executable 
 
 FROM maven:3.6.3-openjdk-11
+
+COPY --from=executable /root/.cabal/bin/eflint-server /usr/bin/
 
 WORKDIR /tmp/eflint-server/
 
@@ -16,8 +14,6 @@ COPY web-server/ web-server
 
 WORKDIR /tmp/eflint-server/web-server
 
-RUN pwd
-RUN ls
 RUN mvn compile
 
 CMD mvn exec:java -Dexec.mainClass="eflint.Main"
