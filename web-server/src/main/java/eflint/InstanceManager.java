@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.DatagramSocket;
 import java.net.ServerSocket;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,14 +44,12 @@ public class InstanceManager {
     private static final int PORT_MAX_NUM = 30000;
     // how to run eflint-server instance
     private static final String EFLINT_COMMAND = "eflint-server";
-    // eflint model file address
-//    private static final String EFLINT_FILE = "/home/msotafa/IdeaProjects/flintserver/src/main/resources/bidding_desire.eflint";
     private static final String FLINT_READY_MESSAGE = "AWAITING STATEMENT";
 
 
     public StandardResponse getAll() {
         return new StandardResponse(
-                StatusResponse.SUCCESS, new Gson().toJsonTree(ListContainer.from(new ArrayList<>(instances.keySet())))
+                StatusResponse.SUCCESS, new Gson().toJsonTree(ListContainer.from(new ArrayList<>(instances.values())))
         );
     }
 
@@ -107,6 +107,8 @@ public class InstanceManager {
 
         CompletableFuture<StandardResponse> futureResponse = new CompletableFuture<>();
 
+        String sourceFileName = request.getModelName();
+
         Optional<File> opFlintFile = TemplateManager.getInstance().synthetize(request.getModelName(),request.getValues());
         if(opFlintFile.isEmpty()) {
             futureResponse.complete(new StandardResponse(StatusResponse.ERROR, "something went wrong with synthesizing your template"));
@@ -126,8 +128,8 @@ public class InstanceManager {
                     @Override
                     public void started() {
                         System.out.println(String.format("instance started on port %s with uuid %s",port,uuid));
-                        instances.put(uuid, new EFlintInstance(port, uuid, Thread.currentThread()));
-                        futureResponse.complete(new StandardResponse(StatusResponse.SUCCESS, uuid));
+                        instances.put(uuid, EFlintInstance.from(port, uuid, Thread.currentThread(),sourceFileName, Timestamp.from(Instant.now())));
+                        futureResponse.complete(new StandardResponse(StatusResponse.SUCCESS, new Gson().toJsonTree(instances.get(uuid))));
                     }
 
                     @Override
