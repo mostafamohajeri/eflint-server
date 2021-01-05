@@ -2,6 +2,7 @@ package eflint;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.reflect.*;
 import eflint.utils.TemplateManager;
 import requesthandlers.EFlintRequestHandler;
 import requests.ControlRequest;
@@ -52,6 +53,7 @@ public class InstanceManager {
                 StatusResponse.SUCCESS, new Gson().toJsonTree(ListContainer.from(new ArrayList<>(instances.values())))
         );
     }
+
 
     public int getPortByUUID(String uuid) {
         if (instances.containsKey(uuid)) {
@@ -106,10 +108,17 @@ public class InstanceManager {
         int port = getRandomPort();
 
         CompletableFuture<StandardResponse> futureResponse = new CompletableFuture<>();
+        Optional<File> opFlintFile;
+        if (request.getValues() == null) {
+          File file = new File(request.getModelName());
+          opFlintFile = file.isFile() ? Optional.of(file) : Optional.empty();
+        }
+        else {
+          opFlintFile = TemplateManager.getInstance().synthetize(request.getModelName(),request.getValues());
+       }
 
         String sourceFileName = request.getModelName();
 
-        Optional<File> opFlintFile = TemplateManager.getInstance().synthetize(request.getModelName(),request.getValues());
         if(opFlintFile.isEmpty()) {
             futureResponse.complete(new StandardResponse(StatusResponse.ERROR, "something went wrong with synthesizing your template"));
         } else {
@@ -130,6 +139,7 @@ public class InstanceManager {
                         System.out.println(String.format("instance started on port %s with uuid %s",port,uuid));
                         instances.put(uuid, EFlintInstance.from(port, uuid, Thread.currentThread(),sourceFileName, Timestamp.from(Instant.now())));
                         futureResponse.complete(new StandardResponse(StatusResponse.SUCCESS, new Gson().toJsonTree(instances.get(uuid))));
+
                     }
 
                     @Override
@@ -220,7 +230,6 @@ public class InstanceManager {
         String command = EFLINT_COMMAND + " " + file.getAbsolutePath() + " " + String.valueOf(port);
         System.out.println(command);
 //        System.out.println(command);
-//        processBuilder.command("bash" ,"-c" , EFLINT_COMMAND + " " + EFLINT_FILE + " "  + String.valueOf(port));
 
         try {
 

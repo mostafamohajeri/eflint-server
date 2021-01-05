@@ -28,5 +28,4 @@ public class EFlintInstance {
     @Getter
     Timestamp timestamp;
 
-
 }

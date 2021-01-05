@@ -1,0 +1,70 @@
+Fact user
+  Derived from candidate.user // candidates, voters and admins are also users
+              ,voter.user
+              ,admin.user
+
+Fact candidate Identified by user
+Fact admin     Identified by user
+Fact voter     Identified by user
+Fact winner    Identified by candidate 
+
+Fact vote  Identified by user * candidate
+
+Act cast-vote 
+  Actor user1
+  Recipient user2
+  Creates vote(user1, candidate(user2))
+  Terminates voting-obligation(user=user1)
+  Holds when voter(user1) && !has-voted(user1) && candidate(user2) 
+
+Duty voting-obligation
+  Holder user
+  Claimant admin
+  Holds when voter(user) && !has-voted(user)
+  Violated when (Exists candidate : winner(candidate))
+
+Act declare-winner
+  Actor user1
+  Recipient user2
+  Creates winner(candidate(user2))
+  Holds when admin(user1) && candidate(user2) && most-votes(candidate(user2))
+
+Fact has-voted Identified by user
+  Holds when (Exists candidate: vote(user, candidate))
+
+Fact most-votes Identified by candidate
+  Holds when (Forall candidate' : 
+         Count(Foreach vote : vote.user
+                 When vote && vote.candidate == candidate') < 
+         Count(Foreach vote : vote.user
+                 When vote && vote.candidate == candidate)
+        When candidate' != candidate)
+
+Invariant fair-vote: !(Exists voter, candidate: voter.user == candidate.user)
+
+Act suspend
+  Actor user1
+  Recipient user2
+  Terminates voter(user2)
+  Holds when admin(user1) && Violated(voting-obligation(user=user2)).
+
++admin(Erin).
+
++voter(Alice).
++voter(Bob).
++voter(Chloe).
++voter(David).
+
++candidate(C1).
++candidate(C2).
+
+
+cast-vote(Alice, C1).
+// winner can be declared
+cast-vote(Bob, C2).
+// winner can no longer be declared
+cast-vote(Chloe, C1).
+// winner can be declared
+declare-winner(Erin, C1).
+// David violated their duty
+suspend(Erin, David).

@@ -1,0 +1,109 @@
+Fact citizen
+Fact official
+
+Fact application Identified by weeknr * citizen * permit-type * location
+Fact permit      Identified by weeknr * citizen * permit-type * location
+Fact permit-type Identified by "solar panels", "new construction"
+Fact location
+
+Fact weeknr             Identified by Int
+Fact weeks-later        Identified by weeknr
+Fact current-weeknr     Identified by Int
+  Derived from Sum(Foreach weeknr : weeknr When weeks-later(weeknr))
+
+Fact nitrogen-level        Identified by 1..10
+Fact nitrogen-threshold    Identified by 1..10
+Fact nitrogen-level-of     Identified by location * nitrogen-level
+Fact too-much-nitrogen-at  Identified by location
+  Holds when nitrogen-level > nitrogen-threshold &&
+             nitrogen-level-of(location, nitrogen-level) &&
+             nitrogen-threshold
+
+Act apply
+  Actor citizen
+  Recipient official
+  Related to permit-type, location
+  Conditioned by
+    (Forall weeknr : !application(weeknr = weeknr))
+  Creates 
+    application(weeknr = current-weeknr) When current-weeknr,
+    consider-application(weeknr = current-weeknr) When current-weeknr
+
+Duty consider-application
+  Holder official
+  Claimant citizen
+  Related to permit-type, location, weeknr
+  Violated when current-weeknr && 
+                current-weeknr >= weeknr + 2 // two weeks have passed
+
+Act deny-application
+  Actor official
+  Recipient citizen
+  Related to permit-type, location
+  Conditioned by 
+    application() && 
+    permit-type == "new construction" && 
+    too-much-nitrogen-at(location)
+  Terminates
+    application(),
+    consider-application()
+
+Act approve-application
+  Actor official
+  Recipient citizen
+  Related to permit-type, location
+  Conditioned by 
+    application() &&
+    (!(permit-type == "new construction") ||
+     !too-much-nitrogen-at(location)
+    )
+  Terminates
+    application(),
+    consider-application()
+  Creates
+    permit(weeknr = current-weeknr) When current-weeknr
+
+Invariant no-new-construction-in-amsterdam : 
+  !(Exists permit : permit &&
+                    permit.permit-type == "new location" && 
+                    permit.location    == Amsterdam)
+
+.
+
+Fact citizen  Identified by Alice, Bob, Chloe
+Fact official Identified by Official
+Fact location Identified by Amsterdam, Eindhoven, Groningen
+
+Fact weeknr         Identified by 0..15
+Fact current-weeknr Identified by 0..15
+.
+
++apply.
++deny-application.
++approve-application.
++weeks-later(0).
+
++nitrogen-level-of(Amsterdam, 10).
++nitrogen-level-of(Eindhoven, 6).
++nitrogen-level-of(Groningen, 1).
++nitrogen-threshold(5).
+
+apply(Chloe, official, "solar panels", Amsterdam).
+?consider-application(official, Chloe, "solar panels", Amsterdam, 0).
+approve-application(official, Chloe, "solar panels", Amsterdam).
+?!consider-application(citizen = Chloe).
+
++weeks-later(1).
+
+apply(Chloe, official, "solar panels", Amsterdam).
+
++weeks-later(2). // official's duty has been violated
+approve-application(official, Chloe, "solar panels", Amsterdam).
+
+apply(Alice, official, "new construction", Eindhoven).
+?consider-application(official, Alice, "new construction", Eindhoven, 3).
+deny-application(official, Alice, "new construction", Eindhoven).
+?!consider-application(official, Alice, "new construction", Eindhoven, 3).
+
+apply(Alice, official, "new construction", Groningen).
+deny-application(official, Alice, "new construction", Groningen). // fails because there are no grounds for denial
