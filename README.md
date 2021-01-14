@@ -1,3 +1,7 @@
+# EFLINT Server
+
+A web server created to act as an API for https://ir.cwi.nl/pub/29922  
+
 ## To run
 
 go to `web-server` directory
@@ -43,7 +47,10 @@ request:
 	"values" : {
 		"purposes": "Revenue + Research",
 		"datatypes": "Address + Phone"
-	}
+	},
+    "flint-search-paths" : [
+             "/path/to/included/flint/files"
+         ]
 }
 ```
 
@@ -53,7 +60,15 @@ response:
 ```json
 {
     "status": "SUCCESS",
-    "message": "f378eafa-1c61-4bc4-a8de-5ea2b144e964"
+    "data": {
+        "port": 31806,
+        "uuid": "545a2d93-5e4d-4545-b91a-8f924850cafe",
+        "source-file-name": "/absolute/path/to/pseudo-pesudo-gdpr.eflint",
+        "flint-search-paths": [
+             "/path/to/included/flint/files"
+        ],
+        "timestamp": "Jan 14, 2021, 11:21:29 AM"
+    }
 }
 ```
 there is a limit to how many instances can be on the server and if exceeded the response will be 
@@ -80,7 +95,11 @@ kills an instance of eflint provided the uuid
 request :
 ```json
 {
-	"uuid": "b2c911f8-0fc5-40e8-8daa-7d49f4901b14"
+    "uuid": "5bf5d826-85ee-45d1-a41a-d882fa272d5b",
+    "request-type": "command",
+    "data": {
+        "command": "kill"
+    }
 }
 ```
 
@@ -120,10 +139,28 @@ response:
 ```json
 {
     "status": "SUCCESS",
-    "data": [
-        "8de2a283-e095-4c01-bae5-776ca46975ad",
-        "9bc120e2-2d69-4171-9dfc-ddb383dab526"
-    ]
+    "data": {
+        "list": [
+            {
+                "port": 31806,
+                "uuid": "545a2d93-5e4d-4545-b91a-8f924850cafe",
+                "source-file-name": "/absolute/path/to/pseudo-pesudo-gdpr.eflint",
+                "flint-search-paths": [
+                     "/path/to/included/flint/files"
+                ],
+                "timestamp": "Jan 14, 2021, 11:21:29 AM"
+            },
+            {
+               "port": 33206,
+               "uuid": "545a2d93-5e4d-4545-b91a-8f924850cafe",
+               "source-file-name": "/absolute/path/to/pseudo-pesudo-gdpr.eflint",
+               "flint-search-paths": [
+                    "/path/to/included/flint/files"
+               ],
+               "timestamp": "Jan 14, 2021, 11:21:29 AM"
+            }
+        ]
+    }
 }
 ```
 
