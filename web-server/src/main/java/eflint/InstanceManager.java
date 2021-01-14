@@ -42,7 +42,7 @@ public class InstanceManager {
     private int limit = 10;
     private Map<String, EFlintInstance> instances;
     private static final int PORT_MIN_NUM = 20000;
-    private static final int PORT_MAX_NUM = 30000;
+    private static final int PORT_MAX_NUM = 40000;
     // how to run eflint-server instance
     private static final String EFLINT_COMMAND = "eflint-server";
     private static final String FLINT_READY_MESSAGE = "AWAITING STATEMENT";
