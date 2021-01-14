@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @AllArgsConstructor(staticName = "from")
 public class EFlintInstance {
@@ -24,6 +25,10 @@ public class EFlintInstance {
     @Getter
     @SerializedName("source-file-name")
     String sourceFileName;
+
+    @Getter
+    @SerializedName("flint-search-paths")
+    List<String> searchPaths;
 
     @Getter
     Timestamp timestamp;

@@ -18,11 +18,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.DatagramSocket;
 import java.net.ServerSocket;
+import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import static requesthandlers.EFlintRequestHandler.handleRequest;
 
@@ -119,6 +121,8 @@ public class InstanceManager {
 
         String sourceFileName = request.getModelName();
 
+        List<String> paths = request.getFilePaths().stream().map(File::new).filter(File::isDirectory).map(File::getAbsolutePath).collect(Collectors.toList());
+
         if(opFlintFile.isEmpty()) {
             futureResponse.complete(new StandardResponse(StatusResponse.ERROR, "something went wrong with synthesizing your template"));
         } else {
@@ -133,11 +137,11 @@ public class InstanceManager {
                     return;
                 }
 
-                runEFlintProcess(opFlintFile.get(), port, uuid, new EFlintLister() {
+                runEFlintProcess(opFlintFile.get(), port, uuid , paths, new EFlintLister() {
                     @Override
                     public void started() {
                         System.out.println(String.format("instance started on port %s with uuid %s",port,uuid));
-                        instances.put(uuid, EFlintInstance.from(port, uuid, Thread.currentThread(),sourceFileName, Timestamp.from(Instant.now())));
+                        instances.put(uuid, EFlintInstance.from(port, uuid, Thread.currentThread(),sourceFileName, paths , Timestamp.from(Instant.now())));
                         futureResponse.complete(new StandardResponse(StatusResponse.SUCCESS, new Gson().toJsonTree(instances.get(uuid))));
 
                     }
@@ -217,7 +221,7 @@ public class InstanceManager {
     }
 
 
-    private void runEFlintProcess(File file,int port, String uuid, EFlintLister lister) {
+    private void runEFlintProcess(File file,int port, String uuid,List<String> filePaths, EFlintLister lister) {
 //        ProcessBuilder processBuilder = new ProcessBuilder();
 
         // -- Linux --
@@ -227,7 +231,8 @@ public class InstanceManager {
         // Run a shell command
 //        processBuilder.command("bash" ,"-c" , "ls -ali" );
 
-        String command = EFLINT_COMMAND + " " + file.getAbsolutePath() + " " + String.valueOf(port);
+        String command = EFLINT_COMMAND + " " + file.getAbsolutePath() + " " + String.valueOf(port) + " ";
+        command += filePaths.stream().map(f -> " -i " + f).collect(Collectors.joining());
         System.out.println(command);
 //        System.out.println(command);
 

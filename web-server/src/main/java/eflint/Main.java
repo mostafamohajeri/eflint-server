@@ -69,6 +69,8 @@ public class Main {
             CreateEFlintInstanceRequest createEFlintInstanceRequest =
                     new Gson().fromJson(request.body(), CreateEFlintInstanceRequest.class);
 
+            System.out.println(createEFlintInstanceRequest);
+
             System.out.println(new Gson().toJson(createEFlintInstanceRequest));
 
             CompletableFuture<StandardResponse> r = InstanceManager.getInstance().createNewInstance(createEFlintInstanceRequest);
