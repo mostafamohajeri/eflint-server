@@ -13,6 +13,8 @@ import javax.servlet.http.Part;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.File;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 import spark.utils.IOUtils;
@@ -129,6 +131,18 @@ public class Main {
             response.type("application/json");
             return new Gson().toJson(InstanceManager.getInstance().getAll());
         });
+
+        if (args.length >= 1) {
+          File file = new File(args[0]);
+          if (file.isFile()) {
+            List<String> paths = new ArrayList<String>();
+            if (args.length >= 2) paths.add(args[1]);
+            CreateEFlintInstanceRequest req = new CreateEFlintInstanceRequest();
+            req.setModelName(args[0]);
+            req.setFilePaths(paths);
+            CompletableFuture<StandardResponse> r = InstanceManager.getInstance().createNewInstance(req);
+          }
+        }
 
     }
 }
