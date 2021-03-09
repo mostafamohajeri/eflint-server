@@ -231,19 +231,21 @@ public class InstanceManager {
         // Run a shell command
 //        processBuilder.command("bash" ,"-c" , "ls -ali" );
 
-        String command = EFLINT_COMMAND + " " + file.getAbsolutePath() + " " + String.valueOf(port) + " ";
-        command += filePaths.stream().map(f -> " -i " + f).collect(Collectors.joining());
-        System.out.println(command);
-//        System.out.println(command);
-
         try {
 
             // -- Linux --
 
             // Run a shell command
 //            Process proc = Runtime.getRuntime().exec(new String[]{"bash","-c", });
-
-            ProcessBuilder ps = new ProcessBuilder(EFLINT_COMMAND, file.getAbsolutePath(), String.valueOf(port));
+            List<String> command = new ArrayList<String>();
+            command.add(EFLINT_COMMAND);
+            command.add(file.getAbsolutePath());
+            command.add(String.valueOf(port));
+            for (String filePath : filePaths) {
+              command.add("-i"); command.add(filePath);
+            }
+            ProcessBuilder ps = new ProcessBuilder(command);
+            System.out.println(ps.command().stream().collect(Collectors.joining(" ")));
             ps.redirectErrorStream(true);
 //            ps.redirectOutput(ProcessBuilder.Redirect.INHERIT);
 
