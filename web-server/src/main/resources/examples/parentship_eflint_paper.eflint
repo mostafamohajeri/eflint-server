@@ -10,7 +10,7 @@ Fact legal-parent     Identified by parent * child
 
 Act ask-for-help
   Actor      child
-  Recipient  parent
+  Recipient  parent Where child != parent
   Creates    help-with-homework(parent,child)
   Holds when legal-parent(parent,child)
 
@@ -18,12 +18,12 @@ Fact homework-due Identified by child
 
 Duty help-with-homework
   Holder        parent
-  Claimant      child
+  Claimant      child Where child != parent
   Violated when homework-due(child)
 
 Act help 
   Actor      parent 
-  Recipient  child
+  Recipient  child Where child != parent
   Terminates help-with-homework(parent,child)
   Holds when help-with-homework(parent,child)
 
