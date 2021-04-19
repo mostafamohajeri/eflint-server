@@ -136,7 +136,8 @@ public class Main {
           File file = new File(args[0]);
           if (file.isFile()) {
             List<String> paths = new ArrayList<String>();
-            if (args.length >= 2) paths.add(args[1]);
+            for (int i = 1; i < args.length; i++) 
+              paths.add(args[1]);
             CreateEFlintInstanceRequest req = new CreateEFlintInstanceRequest();
             req.setModelName(args[0]);
             req.setFilePaths(paths);
