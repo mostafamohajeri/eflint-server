@@ -2,6 +2,7 @@ package eflint;
 
 import com.google.gson.Gson;
 import eflint.InstanceManager;
+import eflint.utils.TemplateManager;
 import requesthandlers.EFlintRequestHandler;
 import requests.CreateEFlintInstanceRequest;
 import requests.EFlintRequest;
@@ -82,16 +83,18 @@ public class Main {
         });
 
         post("/upload", (request, response) -> {
+          File uploadDirectory = new File(System.getProperty("java.io.tmpdir"));
           response.type("application/json");
-          request.attribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement("/tmp"));
+          request.attribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(uploadDirectory.getAbsolutePath()));
           Part filePart = request.raw().getPart("fileToUpload");
+            System.out.println("file uploaded: " + filePart.getSubmittedFileName());
           try (InputStream inputStream = request.raw().getPart("fileToUpload").getInputStream()) {
-            String target_file = "/tmp/" + filePart.getSubmittedFileName();
-            OutputStream outputStream = new FileOutputStream(target_file);
+            File tempFile = File.createTempFile("uploaded-" , "-"+filePart.getSubmittedFileName());
+            OutputStream outputStream = new FileOutputStream(tempFile);
             IOUtils.copy(inputStream, outputStream);
             outputStream.close();
             CreateEFlintInstanceRequest inst_req = new CreateEFlintInstanceRequest();
-            inst_req.setModelName(target_file);
+            inst_req.setModelName(tempFile.getAbsolutePath());
             CompletableFuture<StandardResponse> r = InstanceManager.getInstance().createNewInstance(inst_req);
             return new Gson().toJson(r.get());
          }

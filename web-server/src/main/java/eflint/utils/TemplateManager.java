@@ -70,7 +70,7 @@ public class TemplateManager {
     }
 
 
-    private File writeToFile(String content)
+    public File writeToFile(String content)
             throws IOException {
 
         File tempFile = File.createTempFile("flint-file-", ".eflint");
