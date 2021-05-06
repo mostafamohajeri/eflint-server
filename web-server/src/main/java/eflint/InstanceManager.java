@@ -121,7 +121,10 @@ public class InstanceManager {
 
         String sourceFileName = request.getModelName();
 
-        List<String> paths = request.getFilePaths().stream().map(File::new).filter(File::isDirectory).map(File::getAbsolutePath).collect(Collectors.toList());
+        List<String> paths = new ArrayList<>();
+
+        if(Objects.nonNull(request.getFilePaths()))
+            paths.addAll(request.getFilePaths().stream().map(File::new).filter(File::isDirectory).map(File::getAbsolutePath).collect(Collectors.toList()));
 
         if(opFlintFile.isEmpty()) {
             futureResponse.complete(new StandardResponse(StatusResponse.ERROR, "something went wrong with synthesizing your template"));
